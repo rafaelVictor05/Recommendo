@@ -47,6 +47,11 @@ def apology(message, code=400):
 
     return render_template("apology.html", top=code, bottom=escape(message)), code
 
+@app.route("/favorites")
+@login_required
+def favorites():
+    return render_template("favorites.html")
+
 @app.route("/")
 @login_required
 def index():

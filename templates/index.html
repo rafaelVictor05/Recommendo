@@ -5,14 +5,14 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/recommend" method="get">
-        <div class="mb-3">
-            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="movie" placeholder="Movie title" type="text">
-            <button class="btn btn-primary" type="submit">Search</button>
-            <form action="/favorites" method="POST" style="display:inline;">
-                <button type="submit" class="btn btn-primary">Find based on favorites</button>
-            </form>
-        </div>
-        
-    </form>
+<form action="/recommend" method="get">
+    <div class="d-flex justify-content-center align-items-center mb-3">
+        <input autocomplete="off" autofocus class="form-control w-auto me-2" name="movie" placeholder="Movie title" type="text">
+        <button class="btn btn-primary me-2" type="submit">Search</button>
+        <form action="/favorites" method="POST" style="display:inline;">
+            <button type="submit" class="btn btn-primary">Find based on favorites</button>
+        </form>
+    </div>
+</form>
+
 {% endblock %}

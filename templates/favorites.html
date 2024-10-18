@@ -5,10 +5,12 @@ Favorite Movies
 {% endblock %}
 
 {% block main %}
-<form action="/addMovie" method="get">
-    <div class="mb-3">
-        <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="movie" placeholder="Movie title" type="text">
-        <button class="btn btn-primary" type="submit">Add</button>
+<form action="/favorites" method="post">
+    <div class="d-flex justify-content-center mb-3">
+        <div class="input-group w-auto">
+            <input autocomplete="off" autofocus class="form-control" name="movie" placeholder="Movie title" type="text">
+            <button class="btn btn-primary" type="submit">Add</button>
+        </div>
     </div>
 </form>
 {% endblock %}
