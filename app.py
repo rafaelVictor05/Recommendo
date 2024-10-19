@@ -1,8 +1,9 @@
-from db import get_db_connection, close_db_connection
-from flask import Flask, flash, redirect, render_template, request, session
+from db import get_db_connection
+from flask import Flask, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from functools import wraps
+from recommend import movies_list
 
 app = Flask(__name__)
 
@@ -53,10 +54,18 @@ def favorites():
     return render_template("favorites.html")
 
 @app.route("/")
-@login_required
 def index():
     """TODO""" 
     return render_template("index.html")
+
+@app.route("/search-movie")
+def search_movie():
+    query = request.args.get("query", "")
+    if query:
+        # Filtrar a lista de filmes que começam com o que foi digitado
+        suggestions = [movie for movie in movies_list if movie.lower().startswith(query.lower())]
+        return jsonify(suggestions[:5])  # Retornar os 5 primeiros
+    return jsonify([])
 
 
 @app.route("/login", methods=["GET", "POST"])
