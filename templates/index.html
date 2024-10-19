@@ -15,4 +15,30 @@
     </div>
 </form>
 
+<script>
+    function fetchSuggestions() {
+        const query = document.getElementById("movie-search").value;
+        if (query.length > 2) {
+            fetch(`/search-movie?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    const suggestionsList = document.getElementById("suggestions-list");
+                    suggestionsList.innerHTML = '';
+                    data.forEach(movie => {
+                        const listItem = document.createElement("li");
+                        listItem.classList.add("list-group-item");
+                        listItem.textContent = movie;
+                        listItem.onclick = function() {
+                            document.getElementById("movie-search").value = movie;
+                            suggestionsList.innerHTML = '';
+                        };
+                        suggestionsList.appendChild(listItem);
+                    });
+                });
+        } else {
+            document.getElementById("suggestions-list").innerHTML = '';
+        }
+    }
+</script>
+
 {% endblock %}
