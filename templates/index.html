@@ -7,38 +7,48 @@
 {% block main %}
 <form action="/recommend" method="get">
     <div class="d-flex justify-content-center align-items-center mb-3">
-        <input autocomplete="off" autofocus class="form-control w-auto me-2" name="movie" placeholder="Movie title" type="text">
+        <!-- Input para digitação -->
+        <input type="text" class="form-control" id="movieSearch" 
+            placeholder="type movie title to search..." autocomplete="off" />
+        
+        <select class="form-control basicAutoSelect" name="simple_select" style="display: none;">
+            <!-- As opções serão preenchidas dinamicamente -->
+        </select>
+        
         <button class="btn btn-primary me-2" type="submit">Search</button>
         <form action="/favorites" method="POST" style="display:inline;">
-            <button type="submit" class="btn btn-primary">Find based on favorites</button>
+            <button type="submit" class="btn btn-primary me-2">Find based on favorites</button>
         </form>
     </div>
 </form>
 
 <script>
-    function fetchSuggestions() {
-        const query = document.getElementById("movie-search").value;
-        if (query.length > 2) {
-            fetch(`/search-movie?query=${query}`)
-                .then(response => response.json())
-                .then(data => {
-                    const suggestionsList = document.getElementById("suggestions-list");
-                    suggestionsList.innerHTML = '';
-                    data.forEach(movie => {
-                        const listItem = document.createElement("li");
-                        listItem.classList.add("list-group-item");
-                        listItem.textContent = movie;
-                        listItem.onclick = function() {
-                            document.getElementById("movie-search").value = movie;
-                            suggestionsList.innerHTML = '';
-                        };
-                        suggestionsList.appendChild(listItem);
-                    });
+    jQuery(document).ready(function() {
+        // Para preencher o select com as sugestões
+        jQuery('#movieSearch').on('input', function() {
+            var query = jQuery(this).val();
+            if (query.length > 0) {
+                jQuery.ajax({
+                    url: '/search_movies',
+                    data: { q: query }, // Passa a consulta
+                    dataType: 'json',
+                    success: function(data) {
+                        // Limpa as opções existentes
+                        jQuery('.basicAutoSelect').empty().show(); // Exibe o select
+                        data.forEach(function(movie) {
+                            // Adiciona as novas opções ao select
+                            jQuery('.basicAutoSelect').append(new Option(movie.text, movie.value));
+                        });
+                    }
                 });
-        } else {
-            document.getElementById("suggestions-list").innerHTML = '';
-        }
-    }
+            } else {
+                jQuery('.basicAutoSelect').empty().hide(); // Esconde o select se não houver entrada
+            }
+        });
+
+        // Log para confirmar a inicialização
+        console.log('Autocomplete initialized successfully');
+    });
 </script>
 
 {% endblock %}

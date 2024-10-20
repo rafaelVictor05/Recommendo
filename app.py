@@ -1,9 +1,10 @@
 from db import get_db_connection
+import requests, pickle, os
 from flask import Flask, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from functools import wraps
-from recommend import movies_list
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
@@ -11,8 +12,52 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
+load_dotenv()
+api_key = os.getenv("API_KEY")
+
 connection = get_db_connection()
 cursor = connection.cursor()
+
+def fetch_poster(movie_id):
+     url = "https://api.themoviedb.org/3/movie/{}?api_key={}&language=en-US".format(movie_id, api_key)
+     data=requests.get(url)
+     data=data.json()
+     poster_path = data['poster_path']
+     full_path = "https://image.tmdb.org/t/p/w500/"+poster_path
+     return full_path
+
+movies = pickle.load(open("data/movies_list.pkl", 'rb'))
+similarity = pickle.load(open("data/similarity.pkl", 'rb'))
+movies_list=movies['title'].values
+
+
+@app.route('/search_movies', methods=['GET'])
+def search_movies():
+    query = request.args.get('q', '').lower()  # Recebe a query do usuário e transforma em minúsculas
+    suggestions = []
+
+    # Filtra os filmes que contêm a string digitada (case-insensitive)
+    if query:
+        filtered_movies = [movie for movie in movies_list if query in movie.lower()][:5]  # Limita a 5 sugestões
+
+        # Formata as sugestões no formato desejado
+        suggestions = [{'value': index + 1, 'text': movie} for index, movie in enumerate(filtered_movies)]
+        
+    print(suggestions)
+    return jsonify(suggestions)
+
+@app.route("/favorites")
+def recommend(movie):
+    index = movies[movies['title']==movie].index[0]
+    distance = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda vector:vector[1])
+    recommend_movie=[]
+    recommend_poster=[]
+    for i in distance[1:6]:
+        movies_id=movies.iloc[i[0]].id
+        recommend_movie.append(movies.iloc[i[0]].title)
+        recommend_poster.append(fetch_poster(movies_id))
+    return recommend_movie, recommend_poster
+
 
 
 def login_required(f):
