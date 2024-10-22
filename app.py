@@ -1,6 +1,6 @@
 from db import get_db_connection
 import requests, pickle, os
-from flask import Flask, redirect, render_template, request, session, jsonify
+from flask import Flask, redirect, render_template, request, session, jsonify, flash
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from functools import wraps
@@ -128,10 +128,45 @@ def apology(message, code=400):
 
     return render_template("apology.html", top=code, bottom=escape(message)), code
 
-@app.route("/favorites")
+@app.route("/favorites", methods=["GET", "POST"])
 @login_required
 def favorites():
-    return render_template("favorites.html")
+    if request.method == "POST":
+        movie_title = request.form.get("movie")
+
+        # Busca o ID do filme através do título
+        movie = movies[movies['title'] == movie_title]
+        if not movie.empty:
+            print("movie: ", movie)
+            movie_id = movie.iloc[0]['id']
+            print("movie_id: ", movie_id)
+            # Adiciona o filme à tabela favorites
+            try:
+                cursor.execute(
+                    "INSERT INTO favorites (user_id, title) VALUES (%s, %s)",
+                    (session["user_id"], movie_title)
+                )
+                connection.commit()  # Confirma a transação
+                flash(f'Filme "{movie_title}" adicionado aos favoritos!', 'success')
+            except Exception as e:
+                flash('Ocorreu um erro ao adicionar o filme aos favoritos. Tente novamente.', 'error')
+                print(e)  # Para ajudar na depuração
+        else:
+            flash('Filme não encontrado. Verifique o título e tente novamente.', 'error')
+
+    # Busca os filmes favoritos do usuário
+    cursor.execute(
+        "SELECT title FROM favorites WHERE user_id = %s", 
+        (session["user_id"],)  # Usando current_user.id
+    )
+    favorite_movies = cursor.fetchall()  # Obtém todos os filmes favoritos
+
+    # Formata a lista para facilitar o uso no template
+    favorites_list = [{"title": movie[0], "id": movies[movies['title'] == movie[0]].iloc[0]['id']} for movie in favorite_movies]
+    print("favorites_list: ", favorites_list)
+    return render_template("favorites.html", favorites=favorites_list)
+
+
 
 @app.route("/")
 def index():

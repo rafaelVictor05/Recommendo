@@ -5,12 +5,64 @@ Favorite Movies
 {% endblock %}
 
 {% block main %}
-<form action="/favorites" method="post">
-    <div class="d-flex justify-content-center mb-3">
-        <div class="input-group w-auto">
-            <input autocomplete="off" autofocus class="form-control" name="movie" placeholder="Movie title" type="text">
-            <button class="btn btn-primary" type="submit">Add</button>
-        </div>
+<div class="d-flex justify-content-center align-items-center mb-3">
+    <form action="/favorites" method="post" class="me-2 d-flex">
+        <input type="text" class="form-control me-2" id="movieSearch" 
+            placeholder="Movie Title" autocomplete="off" />
+        
+        <select class="form-control basicAutoSelect me-2" name="movie" style="display: none;">
+            <!-- As opções serão preenchidas dinamicamente -->
+        </select>
+        
+        <button class="btn btn-primary" type="submit">Add</button>
+    </form>
+</div>
+
+<!-- Exibir filmes favoritos -->
+<div class="favorites mt-4">
+    <h3>Your Favorite Movies</h3>
+    <div class="row">
+        {% for favorite in favorites %}
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <img src="{{ fetch_poster(favorite.title) }}" class="card-img-top" alt="{{ favorite.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ favorite.title }}</h5>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
     </div>
-</form>
+</div>
+
+<script>
+    jQuery(document).ready(function() {
+        // Para preencher o select com as sugestões
+        jQuery('#movieSearch').on('input', function() {
+            var query = jQuery(this).val();
+            if (query.length > 0) {
+                jQuery.ajax({
+                    url: '/search_movies',
+                    data: { q: query }, // Passa a consulta
+                    dataType: 'json',
+                    success: function(data) {
+                        // Limpa as opções existentes
+                        jQuery('.basicAutoSelect').empty().show(); // Exibe o select
+                        data.forEach(function(movie) {
+                            // Adiciona as novas opções ao select
+                            jQuery('.basicAutoSelect').append(new Option(movie.text, movie.text));
+                        });
+                    }
+                });
+            } else {
+                jQuery('.basicAutoSelect').empty().hide(); // Esconde o select se não houver entrada
+            }
+        });
+
+        // Log para confirmar a inicialização
+        console.log('Autocomplete initialized successfully');
+    });
+</script>
+
 {% endblock %}
+
