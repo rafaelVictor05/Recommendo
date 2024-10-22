@@ -10,6 +10,7 @@ app = Flask(__name__)
 
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
+app.config['DEBUG'] = True
 Session(app)
 
 load_dotenv()
@@ -26,26 +27,33 @@ def fetch_poster(movie_id):
      full_path = "https://image.tmdb.org/t/p/w500/"+poster_path
      return full_path
 
-def combine_files(part_count, output_file=None):
+def combine_files(part_count, output_file):
     combined_data = []
 
-    # Carregar cada parte e combinar os dados
     for i in range(1, part_count + 1):
-        part_file_name = f"data/similarity_part{i}.pkl"
-        with open(part_file_name, 'rb') as part_file:
-            part_data = pickle.load(part_file)
-            combined_data.extend(part_data)  # Combina os dados de cada parte
+        part_file = f"data/similarity_part{i}.pkl"
+        with open(part_file, 'rb') as f:
+            combined_data.append(pickle.load(f))
 
-    if output_file:
-        # Salva o arquivo combinado se um nome de arquivo de saída for fornecido
-        with open(output_file, 'wb') as f:
-            pickle.dump(combined_data, f)
-        print(f"Arquivo combinado salvo como {output_file}")
+    # Retorne os dados combinados
+    return combined_data
+
+# Caminho do arquivo combinado
+output_file = "data/similarity_combined.pkl"
+
+# Verifica se o arquivo combinado já existe
+if os.path.exists(output_file):
+    print(f"O arquivo {output_file} já existe. Não é necessário combinar novamente.")
+    similarity = pickle.load(open("data/similarity_combined.pkl", 'rb'))
+else:
+    # Juntar as 8 partes e salvar como um novo arquivo 'similarity_combined.pkl'
+    similarity = combine_files(part_count=8, output_file=output_file)
     
-    return combined_data  # Retorna o objeto combinado na memória
+    # Salvar o arquivo combinado
+    with open(output_file, 'wb') as f:
+        pickle.dump(similarity, f)
 
-# Juntar as 8 partes e salvar como um novo arquivo 'similarity_combined.pkl' (opcional)
-similarity = combine_files(part_count=8, output_file="data/similarity_combined.pkl")
+    print(f"As partes foram combinadas e salvas em {output_file}.")
 
 movies = pickle.load(open("data/movies_list.pkl", 'rb'))
 movies_list=movies['title'].values
@@ -66,18 +74,25 @@ def search_movies():
     print(suggestions)
     return jsonify(suggestions)
 
-@app.route("/favorites")
-def recommend(movie):
-    index = movies[movies['title']==movie].index[0]
-    distance = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda vector:vector[1])
-    recommend_movie=[]
-    recommend_poster=[]
-    for i in distance[1:6]:
-        movies_id=movies.iloc[i[0]].id
-        recommend_movie.append(movies.iloc[i[0]].title)
-        recommend_poster.append(fetch_poster(movies_id))
-    return recommend_movie, recommend_poster
+@app.route("/recommend")
+def recommend():
+    movie = request.args.get("movie")  # Receber o título do filme da solicitação
+    index = movies[movies['title'] == movie].index[0]
+    distance = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda vector: vector[1])
+    
+    recommendations = []
+    for i in distance[1:7]:
+        movies_id = movies.iloc[i[0]].id
+        title = movies.iloc[i[0]].title
+        poster = fetch_poster(movies_id)
+        
+        recommendations.append({
+            "title": title,
+            "poster": poster
+        })
 
+    session["recommendations"] = recommendations  # Armazenar as recomendações na sessão
+    return redirect("/")  # Redirecionar para a página inicial
 
 
 def login_required(f):
@@ -120,8 +135,14 @@ def favorites():
 
 @app.route("/")
 def index():
-    """TODO""" 
-    return render_template("index.html")
+    """Renderizar a página inicial."""
+    recommendations = []  # Inicialize a lista de recomendações vazia
+    if "recommendations" in session:  # Verifique se há recomendações na sessão
+        recommendations = session["recommendations"]  # Recupere as recomendações
+        session.pop("recommendations")  # Limpe a sessão após pegar as recomendações
+
+    return render_template("index.html", recommendations=recommendations)  # Passe as recomendações para o template
+
 
 @app.route("/search-movie")
 def search_movie():
@@ -213,3 +234,4 @@ def register():
         return redirect("/login")
 
     return render_template("register.html")
+

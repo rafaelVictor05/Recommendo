@@ -5,22 +5,42 @@
 {% endblock %}
 
 {% block main %}
-<form action="/recommend" method="get">
-    <div class="d-flex justify-content-center align-items-center mb-3">
-        <!-- Input para digitação -->
-        <input type="text" class="form-control" id="movieSearch" 
+<div class="d-flex justify-content-center align-items-center mb-3">
+    <form action="/recommend" method="get" class="me-2 d-flex">
+        <input type="text" class="form-control me-2" id="movieSearch" 
             placeholder="type movie title to search..." autocomplete="off" />
         
-        <select class="form-control basicAutoSelect" name="simple_select" style="display: none;">
+        <select class="form-control basicAutoSelect me-2" name="movie" style="display: none;">
             <!-- As opções serão preenchidas dinamicamente -->
         </select>
         
-        <button class="btn btn-primary me-2" type="submit">Search</button>
-        <form action="/favorites" method="POST" style="display:inline;">
-            <button type="submit" class="btn btn-primary me-2">Find based on favorites</button>
-        </form>
+        <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+
+    <form action="/favorites" method="POST">
+        <button type="submit" class="btn btn-warning" style="min-width: 150px;">Find based on favorites</button>
+    </form>
+</div>
+
+
+
+
+<!-- Se houver recomendações, exibir -->
+<div class="recommendations mt-4">
+    <h3>Recommended Movies</h3>
+    <div class="row">
+        {% for movie in recommendations %}
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <img src="{{ movie.poster }}" class="card-img-top" alt="{{ movie.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ movie.title }}</h5>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
     </div>
-</form>
+</div>
 
 <script>
     jQuery(document).ready(function() {
@@ -37,7 +57,7 @@
                         jQuery('.basicAutoSelect').empty().show(); // Exibe o select
                         data.forEach(function(movie) {
                             // Adiciona as novas opções ao select
-                            jQuery('.basicAutoSelect').append(new Option(movie.text, movie.value));
+                            jQuery('.basicAutoSelect').append(new Option(movie.text, movie.text));
                         });
                     }
                 });
