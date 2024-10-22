@@ -26,8 +26,28 @@ def fetch_poster(movie_id):
      full_path = "https://image.tmdb.org/t/p/w500/"+poster_path
      return full_path
 
+def combine_files(part_count, output_file=None):
+    combined_data = []
+
+    # Carregar cada parte e combinar os dados
+    for i in range(1, part_count + 1):
+        part_file_name = f"data/similarity_part{i}.pkl"
+        with open(part_file_name, 'rb') as part_file:
+            part_data = pickle.load(part_file)
+            combined_data.extend(part_data)  # Combina os dados de cada parte
+
+    if output_file:
+        # Salva o arquivo combinado se um nome de arquivo de saída for fornecido
+        with open(output_file, 'wb') as f:
+            pickle.dump(combined_data, f)
+        print(f"Arquivo combinado salvo como {output_file}")
+    
+    return combined_data  # Retorna o objeto combinado na memória
+
+# Juntar as 8 partes e salvar como um novo arquivo 'similarity_combined.pkl' (opcional)
+similarity = combine_files(part_count=8, output_file="data/similarity_combined.pkl")
+
 movies = pickle.load(open("data/movies_list.pkl", 'rb'))
-similarity = pickle.load(open("data/similarity.pkl", 'rb'))
 movies_list=movies['title'].values
 
 
