@@ -1,7 +1,7 @@
 # Recommendo - Movie Recommendation System
 #### Video Demo:  <URL HERE>
 
-![Recommendo Homepage](https://imgur.com/a/Xv7AAyv)
+![Recommendo Homepage](https://i.imgur.com/jxvF8V6.png)
 
 #### Description:
 Recommendo is a movie recommendation system developed using Flask, HTML, Bootstrap, JavaScript, and MySQL. The platform allows users to discover new movies through two key functionalities:
