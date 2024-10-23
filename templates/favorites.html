@@ -25,7 +25,7 @@ Favorite Movies
         {% for favorite in favorites %}
             <div class="col-md-4 mb-3">
                 <div class="card">
-                    <img src="{{ fetch_poster(favorite.title) }}" class="card-img-top" alt="{{ favorite.title }}">
+                    <img src="{{ fetch_poster(favorite['id']) }}" class="card-img-top" alt="{{ favorite['title'] }}">
                     <div class="card-body">
                         <h5 class="card-title">{{ favorite.title }}</h5>
                     </div>

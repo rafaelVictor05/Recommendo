@@ -21,8 +21,8 @@ cursor = connection.cursor()
 
 def fetch_poster(movie_id):
      url = "https://api.themoviedb.org/3/movie/{}?api_key={}&language=en-US".format(movie_id, api_key)
-     data=requests.get(url)
-     data=data.json()
+     data = requests.get(url)
+     data = data.json()
      poster_path = data['poster_path']
      full_path = "https://image.tmdb.org/t/p/w500/"+poster_path
      return full_path
@@ -160,11 +160,11 @@ def favorites():
         (session["user_id"],)  # Usando current_user.id
     )
     favorite_movies = cursor.fetchall()  # Obtém todos os filmes favoritos
-
+    print("favorite_movies: ", favorite_movies)
     # Formata a lista para facilitar o uso no template
     favorites_list = [{"title": movie[0], "id": movies[movies['title'] == movie[0]].iloc[0]['id']} for movie in favorite_movies]
     print("favorites_list: ", favorites_list)
-    return render_template("favorites.html", favorites=favorites_list)
+    return render_template("favorites.html", favorites=favorites_list, fetch_poster=fetch_poster)
 
 
 
@@ -178,16 +178,41 @@ def index():
 
     return render_template("index.html", recommendations=recommendations)  # Passe as recomendações para o template
 
-
-@app.route("/search-movie")
-def search_movie():
-    query = request.args.get("query", "")
-    if query:
-        # Filtrar a lista de filmes que começam com o que foi digitado
-        suggestions = [movie for movie in movies_list if movie.lower().startswith(query.lower())]
-        return jsonify(suggestions[:5])  # Retornar os 5 primeiros
-    return jsonify([])
-
+@app.route("/recommend_by_favorites", methods=["POST"])
+@login_required
+def recommend_by_favorites():
+    cursor.execute(
+        "SELECT title FROM favorites WHERE user_id = %s", 
+        (session["user_id"],)  # Usando current_user.id
+    )
+    favorite_movies = cursor.fetchall()  # Obtém todos os filmes favoritos
+    print("favorite_movies: ", favorite_movies)
+    # Formata a lista para facilitar o uso no template
+    favorites_list = [{"title": movie[0], "id": movies[movies['title'] == movie[0]].iloc[0]['id']} for movie in favorite_movies]
+    print("favorites1919: ", favorites_list)
+    recommendations = []
+    for favorite in favorites_list:
+        movie_id = favorite["id"]
+        print("r movie_id: ", movie_id)
+        title = favorite["title"]
+        print("r title: ", title)
+        # Encontrar recomendações para cada filme favorito
+        index = movies[movies['id'] == movie_id].index[0]
+        distance = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda vector: vector[1])
+        
+        for i in distance[1:7]:  # Pegue os 6 primeiros filmes recomendados
+            recommended_movie_id = movies.iloc[i[0]].id
+            recommended_movie_title = movies.iloc[i[0]].title
+            poster = fetch_poster(recommended_movie_id)
+            print("RRRR: ", recommendations)
+            recommendations.append({
+                "title": recommended_movie_title,
+                "poster": poster,
+                "reason": f"Because you like {title}"  # Motivo da recomendação
+            })
+    print("recommendations: ", recommendations)
+    session["recommendations"] = recommendations  # Armazena as recomendações
+    return redirect("/")  # Redireciona para a página inicial
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
