@@ -77,6 +77,8 @@ def search_movies():
 @app.route("/recommend")
 def recommend():
     movie = request.args.get("movie")  # Receber o título do filme da solicitação
+    if movie is None:
+        return apology("Didn't insert movie title")
     index = movies[movies['title'] == movie].index[0]
     distance = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda vector: vector[1])
     
@@ -186,16 +188,17 @@ def recommend_by_favorites():
         (session["user_id"],)  # Usando current_user.id
     )
     favorite_movies = cursor.fetchall()  # Obtém todos os filmes favoritos
-    print("favorite_movies: ", favorite_movies)
+
+    if len(favorite_movies) == 0:
+        return render_template("favorites.html")
+
     # Formata a lista para facilitar o uso no template
     favorites_list = [{"title": movie[0], "id": movies[movies['title'] == movie[0]].iloc[0]['id']} for movie in favorite_movies]
-    print("favorites1919: ", favorites_list)
+
     recommendations = []
     for favorite in favorites_list:
         movie_id = favorite["id"]
-        print("r movie_id: ", movie_id)
         title = favorite["title"]
-        print("r title: ", title)
         # Encontrar recomendações para cada filme favorito
         index = movies[movies['id'] == movie_id].index[0]
         distance = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda vector: vector[1])
@@ -210,7 +213,7 @@ def recommend_by_favorites():
                 "poster": poster,
                 "reason": f"Because you like {title}"  # Motivo da recomendação
             })
-    print("recommendations: ", recommendations)
+
     session["recommendations"] = recommendations  # Armazena as recomendações
     return redirect("/")  # Redireciona para a página inicial
 
