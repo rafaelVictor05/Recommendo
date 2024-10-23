@@ -1,7 +1,7 @@
 # Recommendo - Movie Recommendation System
 #### Video Demo:  <URL HERE>
 
-### Homepage:
+#### Homepage:
 ![Recommendo Homepage](https://i.imgur.com/jxvF8V6.png)
 
 #### Description:
