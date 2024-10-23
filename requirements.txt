@@ -1,0 +1,6 @@
+Flask==2.3.2
+Flask-Session==0.4.0
+mysql-connector-python==8.0.33
+python-dotenv==1.0.0
+requests==2.31.0
+Werkzeug==2.3.7
