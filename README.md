@@ -1,6 +1,6 @@
 # Recommendo - Movie Recommendation System
 ### Video Demo
-[Assista à demonstração aqui](https://youtu.be/n1rPDmdefbk)
+[Watch the demonstration here](https://youtu.be/n1rPDmdefbk)
 
 #### Homepage:
 ![Recommendo Homepage](https://i.imgur.com/jxvF8V6.png)
